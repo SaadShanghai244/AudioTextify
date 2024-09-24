@@ -1,0 +1,6 @@
+streamlit
+openai-whisper
+torch>=1.10.1
+tiktoken
+ffmpeg-python
+setuptools-rust
