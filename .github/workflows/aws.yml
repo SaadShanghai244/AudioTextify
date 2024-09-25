@@ -13,12 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: List all directory contents for debugging
-        run: ls -R
-
-      - name: List contents of AudioTextify directory
-        run: ls -R AudioTextify
-
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
