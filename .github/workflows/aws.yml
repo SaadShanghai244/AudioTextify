@@ -13,37 +13,43 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.x"
-
       - name: Decode PEM file from base64
         run: |
           echo "${{ secrets.PEM_FILE_BASE64 }}" | base64 -d > ec2-key.pem
           chmod 400 ec2-key.pem
 
+      - name: Ensure rsync is installed on runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rsync
+
       - name: Create target directory on EC2
         run: |
           ssh -i ec2-key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }} 'mkdir -p /home/${{ secrets.EC2_USER }}/AudioTextify'
 
-      - name: Copy files to EC2
+      - name: Ensure rsync is installed on EC2
         run: |
-          scp -v -i ec2-key.pem -o StrictHostKeyChecking=no -r ./* ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }}:/home/${{ secrets.EC2_USER }}/AudioTextify/
+          ssh -i ec2-key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }} 'sudo apt-get update && sudo apt-get install -y rsync'
+
+      - name: Sync files to EC2 using rsync
+        run: |
+          rsync -avz -e "ssh -i ec2-key.pem -o StrictHostKeyChecking=no" --exclude='venv' --exclude='.git' --delete ./ ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }}:/home/${{ secrets.EC2_USER }}/AudioTextify/
 
       - name: SSH into EC2 and Deploy
         run: |
           ssh -i ec2-key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }} << 'EOF'
           cd /home/${{ secrets.EC2_USER }}/AudioTextify
+          # Create and activate virtual environment if it doesn't exist
           if [ ! -d "venv" ]; then
             python3 -m venv venv
           fi
           source venv/bin/activate
-          pip3 install --upgrade pip
-          pip3 install -r requirements.txt
-          # Stop existing FastAPI and Streamlit processes (optional)
-          pkill -f "fastapi dev app.py" || true
+          # Install or update dependencies
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          # Stop old processes
+          pkill -f "uvicorn" || true
           pkill -f "streamlit" || true
-          # Run FastAPI
-          nohup uvicorn app:app --host 0.0.0.0 --port 8000 &  # Adjust this command based on your setup
+          # Start FastAPI app
+          nohup uvicorn app:app --host 0.0.0.0 --port 8000 &
           EOF
