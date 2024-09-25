@@ -13,20 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.x"
-
-      - name: Install dependencies and set up virtual environment
-        run: |
-          if [ ! -d "venv" ]; then
-            python -m venv venv
-          fi
-          source venv/bin/activate
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
       - name: Decode PEM file from base64
         run: |
           echo "${{ secrets.PEM_FILE_BASE64 }}" | base64 -d > ec2-key.pem
@@ -44,15 +30,16 @@ jobs:
         run: |
           ssh -i ec2-key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }} << 'EOF'
           cd /home/${{ secrets.EC2_USER }}/AudioTextify
+          # Create and activate virtual environment if it doesn't exist
           if [ ! -d "venv" ]; then
             python3 -m venv venv
           fi
           source venv/bin/activate
+          # Install or update dependencies
           pip3 install --upgrade pip
           pip3 install -r requirements.txt
-          # Stop existing FastAPI and Streamlit processes (optional)
+          # Stop old processes
           pkill -f "fastapi dev app.py" || true
           pkill -f "streamlit" || true
-          # Run FastAPI
-          nohup uvicorn app:app --host 0.0.0.0 --port 8000 &  # Adjust this command based on your setup
-          EOF
+          # Start FastAPI app
+          nohup uvicorn app:app --host 0.0.0.0 --port 8000 &  # Adjust this
