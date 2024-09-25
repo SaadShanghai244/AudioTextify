@@ -29,7 +29,7 @@ jobs:
 
       - name: Copy files to EC2
         run: |
-          scp -i ec2-key.pem -o StrictHostKeyChecking=no -r ./* ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }}:/home/${{ secrets.EC2_USER }}/AudioTextify/
+          scp -v -i ec2-key.pem -o StrictHostKeyChecking=no -r ./* ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }}:/home/${{ secrets.EC2_USER }}/AudioTextify/
 
       - name: SSH into EC2 and Deploy
         run: |
