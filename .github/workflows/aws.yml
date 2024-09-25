@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r AudioTextify/requirements.txt  # Adjust path to your requirements file
+          pip install -r /home/${{ secrets.EC2_USER }}/AudioTextify/requirements.txt  # Adjust path to your requirements file
 
       - name: Copy files to EC2
         run: |
