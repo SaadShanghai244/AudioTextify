@@ -12,7 +12,7 @@ model = whisper.load_model("small", device="cpu")
 app.route('/', methods=['GET'])
 async def main():
     try:
-        return "HELLO THIS IS TALHA"
+        return "HELLO THIS APP IS FUNCTIONAL"
     except Exception as e:
         return {"error": str(e)}
     
