@@ -27,7 +27,7 @@ jobs:
         run: |
           echo ${{secrets.PEM_FILE_BASE64}} | base64 -d > ec2-key.pem
           chmod 400 ec2-key.pem
-          scp -o StrictHostKeyChecking=no -i ec2-key.pem -r AudioTextify/* ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }}:/home/${{ secrets.EC2_USER }}/AudioTextify
+          scp -o StrictHostKeyChecking=no -i ec2-key.pem -r AudioTextify/* ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }}:/home/${{ secrets.EC2_USER }}
 
       - name: SSH into EC2 and Deploy
         run: |
