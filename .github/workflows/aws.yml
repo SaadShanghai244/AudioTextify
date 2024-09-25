@@ -20,13 +20,12 @@ jobs:
 
       - name: Install dependencies and set up virtual environment
         run: |
-          cd AudioTextify
-          if [ ! -d "venv" ]; then
-            python -m venv venv
+          if [ ! -d "AudioTextify/venv" ]; then
+            python -m venv AudioTextify/venv
           fi
-          source venv/bin/activate
+          source AudioTextify/venv/bin/activate
           pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r AudioTextify/requirements.txt
 
       - name: Decode PEM file from base64
         run: |
@@ -35,7 +34,7 @@ jobs:
 
       - name: Copy files to EC2
         run: |
-          scp -i ${{ secrets.PEM_FILE }} -r ./* ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }}:/home/${{ secrets.EC2_USER }}/AudioTextify
+          scp -i ${{ secrets.PEM_FILE }} -r ./AudioTextify/* ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }}:/home/${{ secrets.EC2_USER }}/AudioTextify
 
       - name: SSH into EC2 and Deploy
         run: |
