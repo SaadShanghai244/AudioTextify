@@ -15,7 +15,13 @@ async def main():
         return "HELLO THIS APP IS FUNCTIONAL"
     except Exception as e:
         return {"error": str(e)}
-    
+
+app.route('/home', methods=['GET'])
+async def home():
+    try:
+        return "HELLO THIS APP IS FUNCTIONAL"
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.post("/transcribe/")
 async def transcribe_audio(file: UploadFile = File(...)):
