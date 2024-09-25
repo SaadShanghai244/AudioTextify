@@ -20,12 +20,13 @@ jobs:
 
       - name: Install dependencies and set up virtual environment
         run: |
-          if [ ! -d "AudioTextify/venv" ]; then
-            python -m venv AudioTextify/venv
+          cd AudioTextify  # Navigate to the AudioTextify folder
+          if [ ! -d "venv" ]; then
+            python -m venv venv
           fi
-          source AudioTextify/venv/bin/activate
-          pip install --upgrade pip
-          pip install -r AudioTextify/requirements.txt
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt  # Use correct path to the requirements.txt file
 
       - name: Decode PEM file from base64
         run: |
@@ -45,7 +46,7 @@ jobs:
           fi
           source venv/bin/activate
           pip3 install --upgrade pip
-          pip3 install -r requirements.txt
+          pip3 install -r requirements.txt  # Ensure it uses the correct path for requirements.txt
           # Stop existing FastAPI and Streamlit processes (optional)
           pkill -f "fastapi dev app.py" || true
           pkill -f "streamlit" || true
