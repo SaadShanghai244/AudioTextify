@@ -9,7 +9,7 @@ from tempfile import NamedTemporaryFile
 app = FastAPI()
 model = whisper.load_model("small", device="cpu") 
 
-app.route('/', methods=['GET'])
+@app.route('/', methods=['GET'])
 async def main():
     try:
         return "HELLO THIS APP IS FUNCTIONAL"
@@ -17,7 +17,7 @@ async def main():
         return {"error": str(e)}
 
 
-app.route('/home', methods=['GET'])
+@app.route('/home', methods=['GET'])
 async def home():
     try:
         return "HELLO THIS APP IS FUNCTIONAL"
