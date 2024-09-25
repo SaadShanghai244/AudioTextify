@@ -23,11 +23,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt  # Adjust path to your requirements file
 
-      - name: Copy files to EC2
+      - name: Decode PEM file from base64
         run: |
           echo ${{secrets.PEM_FILE_BASE64}} | base64 -d > ec2-key.pem
           chmod 400 ec2-key.pem
-          scp -o StrictHostKeyChecking=no -i ec2-key.pem -r AudioTextify/* ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }}:/home/${{ secrets.EC2_USER }}
+
+      - name: Copy files to EC2
+        run: |
+          scp -o StrictHostKeyChecking=no -i ec2-key.pem -r ./AudioTextify/* ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }}:/home/${{ secrets.EC2_USER }}/AudioTextify
 
       - name: SSH into EC2 and Deploy
         run: |
