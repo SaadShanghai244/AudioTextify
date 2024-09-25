@@ -16,6 +16,7 @@ async def main():
     except Exception as e:
         return {"error": str(e)}
 
+
 app.route('/home', methods=['GET'])
 async def home():
     try:
