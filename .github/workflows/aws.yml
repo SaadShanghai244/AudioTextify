@@ -18,29 +18,10 @@ jobs:
         with:
           python-version: "3.x"
 
-      # - name: Install dependencies
-      #   run: |
-      #     python -m pip install --upgrade pip
-      #     pip install -r requirements.txt  # Adjust path to your requirements file
-
       - name: Decode PEM file from base64
         run: |
           echo ${{secrets.PEM2_BASE64}} | base64 -d > ec2-key.pem
           chmod 400 ec2-key.pem
-
-      # - name: Trying SSH credentials
-      #   run: |
-      #     ssh -o StrictHostKeyChecking=no -i ec2-key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }} << 'EOF'
-      #     cd /home/${{ secrets.EC2_USER }}/AudioTextify
-      #     pwd
-
-      # - name: Entering the project directory
-      #   run: |
-      #     cd /home/${{ secrets.EC2_USER }}/AudioTextify
-
-      - name: Activate the venv
-        run: |
-          source venve/bin/activate
 
       - name: SSH into EC2 and Deploy
         run: |
@@ -48,17 +29,13 @@ jobs:
           cd /home/${{ secrets.EC2_USER }}/AudioTextify
           pwd
           source venve/bin/activate
-
           # getting updated code from github
           git pull origin dev
-
           # Install dependencies
           pip install -r requirements.txt
-
+          pwd
           # Stop existing FastAPI and Streamlit processes (optional)
           pkill -f "fastapi dev app.py" || true
-          pkill -f "streamlit" || true
-
           # Run FastAPI
-          nohup fastapi dev app.py &  # Adjust this command based on your setup
+          nohup uvicorn app:app --host 0.0.0.0 --port 8000 --reload &
           EOF
