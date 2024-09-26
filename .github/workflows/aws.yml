@@ -32,10 +32,6 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i ec2-key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }} << 'EOF'
 
-      - name: Entering the code directory
-        run: |
-          cd AudioTextify
-
       - name: Activate the venv
         run: |
           source venve/bin/activate
