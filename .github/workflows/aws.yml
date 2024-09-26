@@ -34,12 +34,19 @@ jobs:
 
       - name: SSH into EC2 and Deploy
         run: |
-          ssh -o StrictHostKeyChecking=no -i ec2-key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }} << 'EOF'
-          cd /home/${{ secrets.EC2_USER }}/AudioTextify
-          pip3 install -r requirements.txt
+          cd /AudioTextify
+          source venv/bin/activate
+
+          # getting updated code from github
+          git pull origin dev
+
+          # Install dependencies
+          pip install -r requirements.txt
+
           # Stop existing FastAPI and Streamlit processes (optional)
           pkill -f "fastapi dev app.py" || true
           pkill -f "streamlit" || true
+
           # Run FastAPI
           nohup fastapi dev app.py &  # Adjust this command based on your setup
           EOF
