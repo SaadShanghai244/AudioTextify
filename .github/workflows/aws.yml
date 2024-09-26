@@ -26,21 +26,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Step 4: Decode the Base64-encoded PEM file and set up SSH
-      - name: Decode PEM file and setup SSH
-        run: |
-          echo "${{ secrets.PEM_FILE_BASE64 }}" | base64 --decode > ~/.ssh/deploy_key.pem
-          chmod 600 ~/.ssh/deploy_key.pem
-
       - name: Setup SSH agent and add key
         uses: webfactory/ssh-agent@v0.5.3
         with:
-          ssh-private-key: ${{ secrets.PEM_FILE_BASE64 }}
+          ssh-private-key: ${{ secrets.PEM_FILE }}
 
       # Step 5: Deploy to EC2 instance
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_IP }} << 'EOF'
             cd /AudioTextify
             git pull origin dev
             source /venve/bin/activate
