@@ -34,7 +34,7 @@ jobs:
 
       - name: Entering the code directory
         run: |
-          cd home/${{ secrets.EC2_USER }}/AudioTextify
+          cd AudioTextify
 
       - name: Activate the venv
         run: |
