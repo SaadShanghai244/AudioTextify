@@ -1,41 +1,44 @@
-name: FastAPI CI/CD Deployment
+name: Deploy AudioTextify to AWS EC2
 
 on:
   push:
     branches:
-      - dev
+      - dev # Deploy when changes are pushed to the main branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository code
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step 2: Set up Python 3.9 environment
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v4
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          python-version: "3.9"
+          python-version: "3.x"
 
-      # Step 3: Set up SSH with the decoded .pem file
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.PEM_FILE }}
+      # - name: Install dependencies
+      #   run: |
+      #     python -m pip install --upgrade pip
+      #     pip install -r requirements.txt  # Adjust path to your requirements file
 
-      # Step 4: Deploy to EC2 instance
-      - name: Deploy to EC2
+      - name: Decode PEM file from base64
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key.pem ${{ secrets.EC2_USER }}${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
-            cd /AudioTextify
-            git pull origin dev
-            source /venve/bin/activate
-            sudo systemctl restart your-fastapi-service
-          EOF
+          echo ${{secrets.PEM1_BASE64}} | base64 -d > ec2-key.pem
+          chmod 400 ec2-key.pem
+      - name: Copy files to EC2
+        run: |
+          scp -o StrictHostKeyChecking=no -i ec2-key.pem -r ./* ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }}:/home/${{ secrets.EC2_USER }}/AudioTextify
 
-      # Step 5: Notify on successful deployment (Optional)
-      - name: Notify deployment
-        run: echo "Deployment to EC2 successful!"
+      - name: SSH into EC2 and Deploy
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ec2-key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }} << 'EOF'
+          cd /home/${{ secrets.EC2_USER }}/AudioTextify
+          pip3 install -r requirements.txt
+          # Stop existing FastAPI and Streamlit processes (optional)
+          pkill -f "fastapi dev app.py" || true
+          pkill -f "streamlit" || true
+          # Run FastAPI
+          nohup fastapi dev app.py &  # Adjust this command based on your setup
+          EOF
