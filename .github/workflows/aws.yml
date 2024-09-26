@@ -25,8 +25,9 @@ jobs:
 
       - name: Decode PEM file from base64
         run: |
-          echo ${{secrets.PEM1_BASE64}} | base64 -d > ec2-key.pem
+          echo ${{secrets.PEM2_BASE64}} | base64 -d > ec2-key.pem
           chmod 400 ec2-key.pem
+
       - name: Copy files to EC2
         run: |
           scp -o StrictHostKeyChecking=no -i ec2-key.pem -r ./* ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }}:/home/${{ secrets.EC2_USER }}/AudioTextify
