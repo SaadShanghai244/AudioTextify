@@ -1,55 +1,51 @@
-name: Deploy AudioTextify to AWS EC2
+name: FastAPI CI/CD Deployment
 
 on:
   push:
     branches:
-      - dev # Deploy when changes are pushed to the dev branch
+      - dev
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the repository code
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Decode PEM file from base64
-        run: |
-          echo "${{ secrets.PEM_FILE_BASE64 }}" | base64 -d > ec2-key.pem
-          chmod 400 ec2-key.pem
+      # Step 2: Set up Python 3.9 environment
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
 
-      - name: Ensure rsync is installed on runner
+      # Step 3: Install Python dependencies
+      - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y rsync
-
-      - name: Create target directory on EC2
-        run: |
-          ssh -i ec2-key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }} 'mkdir -p /home/${{ secrets.EC2_USER }}/AudioTextify'
-
-      - name: Ensure rsync is installed on EC2
-        run: |
-          ssh -i ec2-key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }} 'sudo apt-get update && sudo apt-get install -y rsync'
-
-      - name: Sync files to EC2 using rsync
-        run: |
-          rsync -avz --no-times --no-perms -e "ssh -i ec2-key.pem -o StrictHostKeyChecking=no" --exclude='venv' --exclude='.git' --delete ./ ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }}:/home/${{ secrets.EC2_USER }}/AudioTextify/
-
-      - name: SSH into EC2 and Deploy
-        run: |
-          ssh -i ec2-key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }} << 'EOF'
-          cd /home/${{ secrets.EC2_USER }}/AudioTextify
-          # Create and activate virtual environment if it doesn't exist
-          if [ ! -d "venv" ]; then
-            python3 -m venv venv
-          fi
-          source venv/bin/activate
-          # Install or update dependencies
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
-          # Stop old processes
-          pkill -f "uvicorn" || true
-          pkill -f "streamlit" || true
-          # Start FastAPI app
-          nohup uvicorn app:app --host 0.0.0.0 --port 8000 &
+
+      # Step 4: Decode the Base64-encoded PEM file and set up SSH
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: |
+            ${{ secrets.PEM_FILE_BASE64 }} | fromJson | base64Decode
+
+      # Step 5: Deploy to EC2 instance
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+            cd /path/to/your/project
+            git pull origin dev
+            source /path/to/venv/bin/activate
+            pip install -r requirements.txt
+            # Optional: Apply database migrations if applicable
+            # Example: alembic upgrade head
+            sudo systemctl restart your-fastapi-service
           EOF
+
+      # Step 6: Notify on successful deployment (Optional)
+      - name: Notify deployment
+        run: echo "Deployment to EC2 successful!"
