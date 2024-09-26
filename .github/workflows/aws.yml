@@ -28,9 +28,9 @@ jobs:
           echo ${{secrets.PEM2_BASE64}} | base64 -d > ec2-key.pem
           chmod 400 ec2-key.pem
 
-      - name: Copy files to EC2
+      - name: Trying SSH credentials
         run: |
-          ssh -i ec2-key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ec2-key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }} << 'EOF'
 
       - name: SSH into EC2 and Deploy
         run: |
