@@ -20,28 +20,22 @@ jobs:
         with:
           python-version: "3.9"
 
-      # Step 3: Install Python dependencies
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Setup SSH agent and add key
+      # Step 3: Set up SSH with the decoded .pem file
+      - name: Setup SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.PEM_FILE }}
 
-      # Step 5: Deploy to EC2 instance
+      # Step 4: Deploy to EC2 instance
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key.pem ec2-user@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
             cd /AudioTextify
             git pull origin dev
             source /venve/bin/activate
-            pip install -r requirements.txt
             sudo systemctl restart your-fastapi-service
           EOF
 
-      # Step 6: Notify on successful deployment (Optional)
+      # Step 5: Notify on successful deployment (Optional)
       - name: Notify deployment
         run: echo "Deployment to EC2 successful!"
